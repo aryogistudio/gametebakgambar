@@ -365,7 +365,8 @@
                 const interval = setInterval(() => {
                     setGameState(prev => {
                         if (prev.timer <= 1) {
-                            const nextState = { ...prev, phase: 'result', timer: 5, chat: [...prev.chat, { text: `Waktu habis! Jawaban: ${prev.word}`, type: 'system' }] };
+                            // UBAH TIMER RESULT JADI 10 DETIK DISINI
+                            const nextState = { ...prev, phase: 'result', timer: 10, chat: [...prev.chat, { text: `Waktu habis! Jawaban: ${prev.word}`, type: 'system' }] };
                             broadcast(nextState);
                             return nextState;
                         }
@@ -384,6 +385,16 @@
                 // Jika waktu result habis (0), otomatis lanjut ke ronde baru
                 if (gameState.timer <= 0) {
                      startRoundLogic(gameState);
+                } else {
+                    // Tambahkan timer mundur untuk fase result juga agar angka berubah
+                     const interval = setInterval(() => {
+                        setGameState(prev => {
+                            const nextState = { ...prev, timer: prev.timer - 1 };
+                            broadcast(nextState);
+                            return nextState;
+                        });
+                    }, 1000);
+                    return () => clearInterval(interval);
                 }
             }, [isHost, gameState.phase, gameState.timer]); 
             // Dependency 'gameState' lengkap dibutuhkan agar startRoundLogic mendapat data terbaru
@@ -406,7 +417,8 @@
                                 if (p.id === gameState.drawerId) return { ...p, score: p.score + 5 };
                                 return p;
                             });
-                            const newState = { ...prev, chat: [...prev.chat, newChatMsg], players: updatedPlayers, phase: 'result', timer: 5 };
+                            // UBAH TIMER RESULT JADI 10 DETIK DISINI JUGA
+                            const newState = { ...prev, chat: [...prev.chat, newChatMsg], players: updatedPlayers, phase: 'result', timer: 10 };
                             broadcast(newState);
                             return newState;
                         });
