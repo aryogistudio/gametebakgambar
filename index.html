@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tebak Gambar (100 Kata)</title>
+    <title>Tebak Gambar (Auto Round)</title>
     
     <!-- React & Tailwind -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -34,32 +34,23 @@
 
         // --- 100 KATA TEBAKAN ---
         const DEFAULT_WORDS = [
-            // Hewan
             "KUCING", "ANJING", "AYAM", "SAPI", "KAMBING", "GAJAH", "SINGA", "HARIMAU", "MONYET", "ULAR",
             "IKAN", "BURUNG", "KUPU-KUPU", "LEBAH", "NYAMUK", "KELINCI", "KUDA", "JERAPAH", "ZEBRA", "BUAYA",
             "DOLPHIN", "HIU", "PANDA", "BERUANG", "KANGURU", "SEMUT", "LABA-LABA", "BEBEK", "DOMBA", "TIKUS",
-            // Benda Rumah
             "MEJA", "KURSI", "LEMARI", "KASUR", "JAM", "LAMPU", "KIPAS ANGIN", "TELEVISI", "KOMPUTER", "LAPTOP",
             "HP", "BUKU", "PENSIL", "PULPEN", "PENGHAPUS", "TAS", "SEPATU", "BAJU", "CELANA", "TOPI",
             "PIRING", "GELAS", "SENDOK", "GARPU", "PISAU", "PANCI", "KOMPOR", "SAPU", "PEL", "EMBER",
-            // Transportasi
             "MOBIL", "MOTOR", "SEPEDA", "BUS", "KERETA API", "PESAWAT", "KAPAL", "TRUK", "HELIKOPTER", "BECAK",
-            // Tempat
             "RUMAH", "SEKOLAH", "KANTOR", "RUMAH SAKIT", "BANDARA", "STASIUN", "PASAR", "TAMAN", "PANTAI", "GUNUNG",
-            // Makanan
             "NASI GORENG", "SATE", "BAKSO", "MIE AYAM", "PIZZA", "BURGER", "ES KRIM", "COKLAT", "ROTI", "SUSU",
-            // Profesi
             "DOKTER", "POLISI", "GURU", "TENTARA", "PILOT", "PETANI", "NELAYAN", "KOKI", "PENYANYI", "PELUKIS",
-            // Alam
             "MATAHARI", "BULAN", "BINTANG", "AWAN", "HUJAN", "PELANGI", "PETIR", "API", "AIR", "TANAH"
         ];
         
-        // --- UTILS ---
         const generateRoomId = () => 'room-' + Math.floor(Math.random() * 9000 + 1000);
 
         // --- COMPONENTS ---
 
-        // 1. LOBBY
         const Lobby = ({ onHost, onJoin, isConnecting }) => {
             const [roomIdInput, setRoomIdInput] = useState("");
             const [myDisplayName, setMyDisplayName] = useState("");
@@ -71,7 +62,7 @@
                             <i className="fa-solid fa-shapes text-2xl md:text-3xl text-green-600"></i>
                         </div>
                         <h1 className="text-2xl md:text-3xl font-extrabold text-gray-800 mb-1">Tebak Gambar</h1>
-                        <p className="text-gray-500 mb-6 text-sm">Main Bareng Tanpa Login</p>
+                        <p className="text-gray-500 mb-6 text-sm">Mode: P2P + Auto Round</p>
                         
                         <div className="space-y-4">
                             <input 
@@ -79,7 +70,6 @@
                                 className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-green-500 outline-none text-center font-bold"
                                 value={myDisplayName} onChange={e => setMyDisplayName(e.target.value)}
                             />
-
                             <div className="border-t pt-4">
                                 <button 
                                     onClick={() => onHost(myDisplayName)}
@@ -89,13 +79,11 @@
                                     {isConnecting ? "Memproses..." : "Buat Game Baru (Host)"}
                                 </button>
                             </div>
-
                             <div className="relative flex py-2 items-center">
                                 <div className="flex-grow border-t border-gray-200"></div>
                                 <span className="flex-shrink mx-4 text-gray-400 text-xs">GABUNG TEMAN</span>
                                 <div className="flex-grow border-t border-gray-200"></div>
                             </div>
-
                             <div className="flex gap-2">
                                 <input 
                                     type="text" placeholder="ID Room"
@@ -116,7 +104,6 @@
             );
         };
 
-        // 2. CANVAS
         const CanvasBoard = ({ isDrawer, color, width, socket, gameState }) => {
             const canvasRef = useRef(null);
             const ctxRef = useRef(null);
@@ -140,7 +127,6 @@
                 };
                 resize();
                 window.addEventListener('resize', resize);
-                // Delay resize to fix mobile init issue
                 setTimeout(resize, 100); 
                 return () => window.removeEventListener('resize', resize);
             }, []);
@@ -228,7 +214,6 @@
             );
         };
 
-        // 3. MAIN APP
         const App = () => {
             const [view, setView] = useState("lobby");
             const [myId, setMyId] = useState(null);
@@ -282,10 +267,8 @@
                 setMyName(name);
                 setIsHost(isHostRole);
                 setStatus("Menghubungkan...");
-
                 const myPeerId = isHostRole ? roomId : null;
                 const peer = new Peer(myPeerId);
-
                 peer.on('open', (id) => {
                     setMyId(id);
                     setStatus("Online");
@@ -298,7 +281,6 @@
                         setupConnection(conn, false);
                     }
                 });
-
                 peer.on('connection', (conn) => { if (isHostRole) setupConnection(conn, true); });
                 peer.on('error', (err) => { alert("Gagal konek: " + err.type); setStatus("Error"); setView("lobby"); });
             };
@@ -313,9 +295,7 @@
                             broadcast(newState);
                             return newState;
                         });
-                    } else {
-                        setView("game");
-                    }
+                    } else { setView("game"); }
                 });
                 conn.on('data', (data) => {
                     if (data.type === 'SYNC_STATE') setGameState(data.state);
@@ -355,25 +335,31 @@
 
             const startGame = () => {
                 if (!isHost) return;
-                const players = gameState.players;
+                startRoundLogic(gameState);
+            };
+
+            // Logic untuk memulai ronde (Dipisah agar bisa dipanggil otomatis)
+            const startRoundLogic = (currentState) => {
+                const players = currentState.players;
                 const drawer = players[Math.floor(Math.random() * players.length)];
                 const word = wordList[Math.floor(Math.random() * wordList.length)];
                 
                 const newState = {
-                    ...gameState,
+                    ...currentState,
                     phase: "playing",
                     drawerId: drawer.id,
                     word: word,
                     timer: 60,
-                    round: gameState.round + 1,
-                    chat: [...gameState.chat, { text: `Ronde ${gameState.round + 1} dimulai!`, type: 'system' }],
-                    triggerClear: gameState.triggerClear + 1
+                    round: currentState.round + 1,
+                    chat: [...currentState.chat, { text: `Ronde ${currentState.round + 1} dimulai!`, type: 'system' }],
+                    triggerClear: currentState.triggerClear + 1
                 };
                 setGameState(newState);
                 broadcast(newState);
                 socketRef.current.trigger({ type: 'CLEAR' });
             };
 
+            // Timer Loop
             useEffect(() => {
                 if (!isHost || gameState.phase !== 'playing') return;
                 const interval = setInterval(() => {
@@ -391,14 +377,16 @@
                 return () => clearInterval(interval);
             }, [isHost, gameState.phase, gameState.timer]);
 
+            // AUTO NEXT ROUND LOOP
             useEffect(() => {
                 if (!isHost || gameState.phase !== 'result') return;
+                
+                // Jika waktu result habis (0), otomatis lanjut ke ronde baru
                 if (gameState.timer <= 0) {
-                     const nextState = { ...gameState, phase: 'waiting', drawerId: null, word: "" };
-                     setGameState(nextState);
-                     broadcast(nextState);
+                     startRoundLogic(gameState);
                 }
-            }, [isHost, gameState.phase, gameState.timer]);
+            }, [isHost, gameState.phase, gameState.timer]); 
+            // Dependency 'gameState' lengkap dibutuhkan agar startRoundLogic mendapat data terbaru
 
             const handleChat = (payload, amIHost) => {
                 const { senderName, text, senderId } = payload;
@@ -446,7 +434,6 @@
 
             return (
                 <div className="flex flex-col h-screen max-w-7xl mx-auto bg-gray-50 shadow-2xl">
-                    {/* Header */}
                     <div className="bg-white px-4 py-3 shadow flex justify-between items-center z-10 shrink-0">
                         <div className="flex items-center gap-3">
                             <div className="bg-gray-800 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg">{gameState.timer}</div>
@@ -461,10 +448,7 @@
                         <div className="text-xs bg-gray-100 px-2 py-1 rounded font-mono border">ID: {gameState.roomId}</div>
                     </div>
 
-                    {/* Layout Utama: Kolom di HP, Baris di Desktop */}
                     <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
-                        
-                        {/* Sidebar Pemain (Desktop Only) */}
                         <div className="hidden md:block w-56 bg-white border-r p-2 overflow-y-auto shrink-0">
                             <div className="text-xs font-bold text-gray-400 mb-2 uppercase">Pemain ({gameState.players.length})</div>
                             {gameState.players.sort((a,b)=>b.score-a.score).map(p => (
@@ -479,10 +463,7 @@
                             ))}
                         </div>
 
-                        {/* Area Canvas (Flexible) */}
                         <div className="flex-1 bg-gray-100 p-2 md:p-4 flex flex-col relative min-h-0">
-                            
-                            {/* OVERLAY KHUSUS PENGGAMBAR */}
                             {isDrawer && gameState.phase === 'playing' && (
                                 <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-3 mb-2 rounded shadow-sm flex items-center justify-between animate-pulse">
                                     <div className="font-bold">GILIRAN KAMU! GAMBAR: <span className="text-2xl ml-2 uppercase text-black">{gameState.word}</span></div>
@@ -490,16 +471,14 @@
                                 </div>
                             )}
 
-                            {/* Result Overlay */}
                             {gameState.phase === 'result' && (
                                 <div className="absolute inset-0 bg-black/80 z-30 flex flex-col items-center justify-center text-white backdrop-blur-sm p-4 text-center">
                                     <div className="text-xl mb-2 opacity-80">Jawabannya adalah</div>
                                     <div className="text-4xl md:text-5xl font-black text-green-400 mb-6 uppercase tracking-wider">{gameState.word}</div>
-                                    <div className="bg-white/10 px-4 py-2 rounded-full text-sm">Ronde baru sebentar lagi...</div>
+                                    <div className="bg-white/10 px-4 py-2 rounded-full text-sm">Ronde baru otomatis dalam {gameState.timer}...</div>
                                 </div>
                             )}
 
-                            {/* Start Button Overlay */}
                             {gameState.phase === 'waiting' && isHost && (
                                 <div className="absolute inset-0 bg-white/80 z-30 flex items-center justify-center backdrop-blur-sm">
                                     <button onClick={startGame} className="bg-green-600 hover:bg-green-700 text-white text-xl font-bold py-4 px-10 rounded-full shadow-xl transform transition hover:scale-105">
@@ -518,7 +497,6 @@
                                 />
                             </div>
 
-                            {/* Toolbar (Drawer Only) */}
                             {isDrawer && gameState.phase === 'playing' && (
                                 <div className="bg-white p-2 mt-2 rounded-lg shadow-sm border flex justify-between items-center gap-2 overflow-x-auto">
                                     <div className="flex gap-1 shrink-0">
@@ -534,7 +512,6 @@
                             )}
                         </div>
 
-                        {/* Chat & Guessing Area (Fixed Height on Mobile) */}
                         <div className="h-[35vh] md:h-auto md:w-80 bg-white border-t md:border-t-0 md:border-l flex flex-col shadow-[0_-5px_15px_rgba(0,0,0,0.05)] md:shadow-none z-20 shrink-0">
                             <div className="p-2 md:p-3 bg-gray-50 border-b font-bold text-gray-700 text-sm flex items-center gap-2">
                                 <i className="fa-regular fa-comments"></i> Obrolan & Tebakan
